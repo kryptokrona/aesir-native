@@ -6,6 +6,7 @@ import {
   useAppStoreState,
   useGlobalStore,
   usePreferencesStore,
+  useUserStore
 } from '@/services';
 
 import { Linking } from 'react-native';
@@ -25,12 +26,13 @@ const linking: LinkingOptions<RootStackParamList> = {
       },
     },
   },
-  prefixes: ['hugin://'],
+  prefixes: ['xkr://'],
 };
 
 export const RootNavigator = () => {
   const hydrated = useAppStoreState((state) => state._hasHydrated);
   const authenticated = useGlobalStore((state) => state.authenticated);
+  const user = useUserStore((state) => state.user);
   const authMethod = usePreferencesStore(
     (state) => state.preferences?.authMethod,
   );
@@ -51,10 +53,13 @@ export const RootNavigator = () => {
   }
 
   let initialRouteName = Stacks.AuthStack;
-  if (authenticated && authMethod) {
+  if (
+    authenticated &&
+    authMethod &&
+    user?.address &&
+    user.address.length >= 64
+  ) {
     initialRouteName = Stacks.MainStack;
-  } else {
-    initialRouteName = Stacks.AuthStack;
   }
 
   return (

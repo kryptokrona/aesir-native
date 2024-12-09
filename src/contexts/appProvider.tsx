@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 
 import { SafeAreaView } from 'react-native';
 
-import { useGlobalStore, useUserStore } from '@/services';
+import { loadWalletFromDb, initDB, useGlobalStore, useUserStore } from '@/services';
 
 interface AppProviderProps {
   children: React.ReactNode;
@@ -13,7 +13,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const user = useUserStore((state) => state.user);
 
   async function init() {
-    // await initDB();
+    await initDB();
+    await loadWalletFromDb();
     // const keys = await loadAccount();
     // user.keys = keys;
     // await bare(user);

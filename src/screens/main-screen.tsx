@@ -257,11 +257,10 @@ export const MainScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
  balance: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
+    color: '#0eff6b',
+    fontSize: 26,
     textAlign: 'center',
-    fontFamily: 'monospace'
+    fontFamily: 'RobotoMono-Regular',
   },
   separator: {
     width: '100vw',

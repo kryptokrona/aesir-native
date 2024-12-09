@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import {
   Card,
   Container,
+  Header,
   InputField,
   Pincode,
   ScreenLayout,
@@ -20,10 +21,11 @@ import {
   usePreferencesStore,
   useThemeStore,
   useUserStore,
+  createWallet
 } from '@/services';
 import { AuthMethods, AuthStackNavigationType } from '@/types';
 
-import { Header } from '../../components/_navigation/header';
+import { initDB } from '../../services/sqlite';
 
 export const CreateAccScreen: React.FC = () => {
   const { t } = useTranslation();
@@ -38,14 +40,17 @@ export const CreateAccScreen: React.FC = () => {
   const [authMethod, setAuthMethod] = useState<AuthMethods>(
     AuthMethods.reckless,
   );
-  const [pincode, setPincode] = useState<string | null>(null);
+  const [pincode, setPincode] = useState<string>('');
+
   const [loading, setLoading] = useState<boolean>(false);
 
   const nameError = !name || name.length === 0;
 
+  const pinError = authMethod === 'pincode' && pincode.length < 6;
+
   useLayoutEffect(() => {
     navigation.setOptions({
-      header: () => <Header backButton title={t('createProfile')} />,
+      header: () => <Header title={t('createNewAccount')} />,
     });
   }, [t]);
 
@@ -55,15 +60,15 @@ export const CreateAccScreen: React.FC = () => {
 
   async function onCreateProfile() {
     setLoading(true);
-    // Save selected authentication method and pincode if applicable
-    // await initDB();
-    const address = 'lolll';
+    await initDB();
+
+    const address = await createWallet();
 
     useUserStore.setState((state) => ({
       ...state,
       user: {
         ...state.user,
-        address,
+        address
       },
     }));
 
@@ -76,7 +81,6 @@ export const CreateAccScreen: React.FC = () => {
       },
     }));
 
-    console.log({ authMethod });
     useGlobalStore.getState().setAuthenticated(true);
 
     if (authMethod === AuthMethods.pincode) {
@@ -112,19 +116,10 @@ export const CreateAccScreen: React.FC = () => {
 
   return (
     <ScreenLayout>
-      <View>
-        <InputField
-          label={t('nickname')}
-          value={name}
-          onChange={onNameInput}
-          maxLength={nameMaxLength}
-          error={nameError}
-          errorText="Name is required"
-        />
-      </View>
 
       <Card>
-        <TextField size="small">{t('enablePin')}</TextField>
+        {/* // TODO translation */}
+        <TextField size="small">{t('authenticateHow')}</TextField>
         <View style={styles.radioGroup}>
           <TouchableOpacity
             style={styles.radioButton}
@@ -137,13 +132,16 @@ export const CreateAccScreen: React.FC = () => {
               }
             />
             <TextField type="muted" size="small">
-              {t('recklessMode')}
+              {t('noAuth')}
             </TextField>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.radioButton}
-            onPress={() => setAuthMethod(AuthMethods.pincode)}>
+            onPress={() => {
+              setAuthMethod(AuthMethods.pincode);
+              setPincode('');
+            }}>
             <View
               style={
                 authMethod === AuthMethods.pincode
@@ -167,21 +165,23 @@ export const CreateAccScreen: React.FC = () => {
               }
             />
             <TextField type="muted" size="small">
-              {t('bioMetric')}
+              {t('useHardware')}
             </TextField>
           </TouchableOpacity>
         </View>
 
         {authMethod === 'pincode' && (
-          <View style={styles.pinContainer}>
-            <Pincode onFinish={onEnterPin} />
+          <View>
+            <Pincode onFinish={onEnterPin} onPartPin={() => ''} />
           </View>
         )}
       </Card>
 
       <Container bottom>
-        <TextButton onPress={onCreateProfile} disabled={loading || nameError}>
-          {t('createProfile')}
+        <TextButton
+          onPress={onCreateProfile}
+          disabled={loading || pinError}>
+          {t('continue')}
         </TextButton>
       </Container>
     </ScreenLayout>
@@ -189,7 +189,6 @@ export const CreateAccScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  pinContainer: {},
   radioButton: {
     flexDirection: 'row',
     // alignItems: 'center',
